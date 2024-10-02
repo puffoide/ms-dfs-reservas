@@ -1,16 +1,24 @@
 package dfs.s3.ms_dfs_reservas.controller;
 
+import dfs.s3.ms_dfs_reservas.controller.ReservaNotFoundException;
 import dfs.s3.ms_dfs_reservas.model.Cita;
 import dfs.s3.ms_dfs_reservas.service.CitaService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/citas")
 public class ReservasController {
 
     private static final Logger log = LoggerFactory.getLogger(ReservasController.class);
@@ -18,55 +26,69 @@ public class ReservasController {
     @Autowired
     private CitaService citaService;
 
-    @GetMapping("/citas")
-    public List<Cita> getCitas() {
+    // Obtener todas las citas 
+    @GetMapping
+    public CollectionModel<EntityModel<Cita>> getCitas() {
         log.info("GET /citas");
         log.info("Retornando todas las citas registradas.");
-        return citaService.getAllCitas();
+        List<Cita> citas = citaService.getAllCitas();
+
+        List<EntityModel<Cita>> citaResources = citas.stream()
+                .map(cita -> EntityModel.of(cita,
+                        WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getCitaById(cita.getId())).withSelfRel()))
+                .collect(Collectors.toList());
+
+        WebMvcLinkBuilder linkTo = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getCitas());
+        return CollectionModel.of(citaResources, linkTo.withRel("citas"));
     }
 
-    @GetMapping("/citas/{id}")
-    public Cita getCitaById(@PathVariable Long id) {
-        log.info("Obteniendo cita con ID: {}", id);
-    
-        return citaService.getCitaById(id).orElse(null);
+    // Obtener una cita por ID 
+    @GetMapping("/{id}")
+public EntityModel<Cita> getCitaById(@PathVariable Long id) {
+    log.info("GET /citas/{}", id);
+    Optional<Cita> cita = citaService.getCitaById(id);
+
+    if (cita.isPresent()) {
+        return EntityModel.of(cita.get(),
+                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getCitaById(id)).withSelfRel(),
+                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getCitas()).withRel("all-citas"));
+    } else {
+        throw new ReservaNotFoundException("Cita no encontrada con id: " + id);
+    }
+}
+
+
+    // Crear una nueva cita 
+    @PostMapping
+    public EntityModel<Cita> createCita(@Validated @RequestBody Cita cita) {
+        log.info("POST /citas");
+        Cita nuevaCita = citaService.saveCita(cita);
+        return EntityModel.of(nuevaCita,
+                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getCitaById(nuevaCita.getId())).withSelfRel(),
+                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getCitas()).withRel("all-citas"));
     }
 
-    @PostMapping("/citas")
-    public Cita createCita(@RequestBody Cita cita) {
-        log.info("Creando nueva cita: {}", cita);
-        try {
-            Cita nuevaCita = citaService.saveCita(cita);
-            log.info("Cita creada exitosamente: {}", nuevaCita);
-            return nuevaCita;
-        } catch (RuntimeException e) {
-            log.error("Error al crear cita: {}", e.getMessage());
-            throw e; // Re-throw to let the caller handle it
-        }
+    // Actualizar una cita 
+    @PutMapping("/{id}")
+    public EntityModel<Cita> updateCita(@PathVariable Long id, @RequestBody Cita citaActualizada) {
+        log.info("PUT /citas/{}", id);
+        Cita citaActualizadaFinal = citaService.updateCita(id, citaActualizada);
+        return EntityModel.of(citaActualizadaFinal,
+                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getCitaById(id)).withSelfRel(),
+                WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getCitas()).withRel("all-citas"));
     }
 
-    @PutMapping("/citas/{id}")
-    public Cita updateCita(@PathVariable Long id, @RequestBody Cita citaActualizada) {
-        log.info("Actualizando cita con ID: {}", id);
-        try {
-            Cita citaActualizadaFinal = citaService.updateCita(id, citaActualizada);
-            log.info("Cita actualizada exitosamente: {}", citaActualizadaFinal);
-            return citaActualizadaFinal;
-        } catch (RuntimeException e) {
-            log.error("Error al actualizar cita: {}", e.getMessage());
-            throw e; // Re-throw to let the caller handle it
-        }
-    }
-
-    @DeleteMapping("/citas/{id}")
+    // Cancelar una cita
+    @DeleteMapping("/{id}")
     public void cancelCita(@PathVariable Long id) {
-        log.info("Cancelando cita con ID: {}", id);
-        try {
-            citaService.cancelCita(id);
-            log.info("Cita con ID {} cancelada exitosamente", id);
-        } catch (RuntimeException e) {
-            log.error("Error al cancelar cita: {}", e.getMessage());
-            throw e; // Re-throw to let the caller handle it
+        log.info("DELETE /citas/{}", id);
+        citaService.cancelCita(id);
+    }
+
+    // Clase para manejar excepciones
+    static class ReservaNotFoundException extends RuntimeException {
+        public ReservaNotFoundException(String message) {
+            super(message);
         }
     }
 }

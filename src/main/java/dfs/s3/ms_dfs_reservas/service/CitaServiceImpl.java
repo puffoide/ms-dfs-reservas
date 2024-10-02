@@ -1,5 +1,6 @@
 package dfs.s3.ms_dfs_reservas.service;
 
+import dfs.s3.ms_dfs_reservas.controller.ReservaNotFoundException;
 import dfs.s3.ms_dfs_reservas.model.Cita;
 import dfs.s3.ms_dfs_reservas.repository.CitaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +22,13 @@ public class CitaServiceImpl implements CitaService {
 
     @Override
     public Optional<Cita> getCitaById(Long id) {
-        return citaRepository.findById(id);
+        Optional<Cita> citaOpt = citaRepository.findById(id);
+    
+    if (citaOpt.isEmpty()) {
+        throw new ReservaNotFoundException("Cita no encontrada con id: " + id);
+    }
+
+    return citaOpt;
     }
 
     @Override
@@ -39,33 +46,23 @@ public class CitaServiceImpl implements CitaService {
 
     @Override
     public void cancelCita(Long id) {
-        Optional<Cita> citaOpt = citaRepository.findById(id);
-        if (citaOpt.isPresent()) {
-            Cita cita = citaOpt.get();
-            cita.setDisponible(true); // Marcar el horario como disponible
-            citaRepository.save(cita);
-            citaRepository.deleteById(id);
-        } else {
-            throw new RuntimeException("Cita no encontrada");
-        }
+        Cita cita = citaRepository.findById(id).orElseThrow(() -> new ReservaNotFoundException("Cita no encontrada con id: " + id));
+        cita.setDisponible(true); // Marcar el horario como disponible
+        citaRepository.save(cita);
+        citaRepository.deleteById(id);
     }
 
     @Override
     public Cita updateCita(Long id, Cita citaActualizada) {
-        Optional<Cita> citaOpt = citaRepository.findById(id);
-        if (citaOpt.isPresent()) {
-            Cita citaExistente = citaOpt.get();
+        Cita citaExistente = citaRepository.findById(id).orElseThrow(() -> new ReservaNotFoundException("Cita no encontrada con id: " + id));
 
-            citaExistente.setPaciente(citaActualizada.getPaciente());
-            citaExistente.setFechaHora(citaActualizada.getFechaHora());
-            citaExistente.setMedico(citaActualizada.getMedico());
-            citaExistente.setInicio(citaActualizada.getInicio());
-            citaExistente.setFin(citaActualizada.getFin());
-            citaExistente.setDisponible(citaActualizada.isDisponible());
+        citaExistente.setPaciente(citaActualizada.getPaciente());
+        citaExistente.setFechaHora(citaActualizada.getFechaHora());
+        citaExistente.setMedico(citaActualizada.getMedico());
+        citaExistente.setInicio(citaActualizada.getInicio());
+        citaExistente.setFin(citaActualizada.getFin());
+        citaExistente.setDisponible(citaActualizada.isDisponible());
 
-            return citaRepository.save(citaExistente);
-        } else {
-            throw new RuntimeException("Cita no encontrada");
-        }
+        return citaRepository.save(citaExistente);
     }
 }
