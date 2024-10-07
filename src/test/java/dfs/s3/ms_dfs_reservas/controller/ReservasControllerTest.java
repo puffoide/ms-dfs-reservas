@@ -42,8 +42,8 @@ public class ReservasControllerTest {
 
         mockMvc.perform(get("/api/citas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.[0].paciente", is("Juan")))
-                .andExpect(jsonPath("$._embedded.[1].paciente", is("Maria")));
+                .andExpect(jsonPath("$._embedded.citaList[0].paciente", is("Juan")))
+                .andExpect(jsonPath("$._embedded.citaList[1].paciente", is("Maria")));
     }
 
     @Test

@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: dfs.s3.ms_dfs_reservas.MsDfsReservasApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.818 s -- in dfs.s3.ms_dfs_reservas.MsDfsReservasApplicationTests
