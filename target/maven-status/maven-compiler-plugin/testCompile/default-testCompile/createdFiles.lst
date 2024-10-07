@@ -1,0 +1,4 @@
+dfs\s3\ms_dfs_reservas\service\CitaServiceTest.class
+dfs\s3\ms_dfs_reservas\repository\CitaRepositoryTest.class
+dfs\s3\ms_dfs_reservas\controller\ReservasControllerTest.class
+dfs\s3\ms_dfs_reservas\MsDfsReservasApplicationTests.class
