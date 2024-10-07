@@ -26,10 +26,10 @@ public class CitaServiceTest {
     public void testCreateCita() {
         Cita cita = new Cita();
         cita.setPaciente("Carlos");
-        cita.setFechaHora(LocalDateTime.now());
+        cita.setFechaHora(LocalDateTime.now().toString());
         cita.setMedico("Dr. Lopez");
-        cita.setInicio(LocalDateTime.now().minusHours(2));
-        cita.setFin(LocalDateTime.now());
+        cita.setInicio(LocalDateTime.now().minusHours(2).toString());
+        cita.setFin(LocalDateTime.now().toString());
         cita.setDisponible(true);
 
         when(citaRepository.save(any(Cita.class))).thenReturn(cita);

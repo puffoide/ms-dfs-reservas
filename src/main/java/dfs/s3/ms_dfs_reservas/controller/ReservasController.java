@@ -1,6 +1,5 @@
 package dfs.s3.ms_dfs_reservas.controller;
 
-import dfs.s3.ms_dfs_reservas.controller.ReservaNotFoundException;
 import dfs.s3.ms_dfs_reservas.model.Cita;
 import dfs.s3.ms_dfs_reservas.service.CitaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +55,23 @@ public EntityModel<Cita> getCitaById(@PathVariable Long id) {
         throw new ReservaNotFoundException("Cita no encontrada con id: " + id);
     }
 }
+
+// Obtener horarios disponibles
+@GetMapping("/disponibles")
+public CollectionModel<EntityModel<Cita>> getCitasDisponibles() {
+    log.info("GET /citas/disponibles");
+    log.info("Retornando todas las citas disponibles.");
+    List<Cita> citasDisponibles = citaService.getCitasDisponibles();
+
+    List<EntityModel<Cita>> citaResources = citasDisponibles.stream()
+            .map(cita -> EntityModel.of(cita,
+                    WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getCitaById(cita.getId())).withSelfRel()))
+            .collect(Collectors.toList());
+
+    WebMvcLinkBuilder linkTo = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getCitasDisponibles());
+    return CollectionModel.of(citaResources, linkTo.withRel("citas-disponibles"));
+}
+
 
 
     // Crear una nueva cita 

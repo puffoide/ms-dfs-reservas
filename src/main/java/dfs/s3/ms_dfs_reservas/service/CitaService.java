@@ -12,4 +12,6 @@ public interface CitaService {
     Cita saveCita(Cita cita);
     void cancelCita(Long id);
     Cita updateCita(Long id, Cita citaActualizada);
+    List<Cita> getCitasDisponibles();
+
 }

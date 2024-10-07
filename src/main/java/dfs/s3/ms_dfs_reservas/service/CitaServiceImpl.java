@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CitaServiceImpl implements CitaService {
@@ -23,12 +24,19 @@ public class CitaServiceImpl implements CitaService {
     @Override
     public Optional<Cita> getCitaById(Long id) {
         Optional<Cita> citaOpt = citaRepository.findById(id);
-    
-    if (citaOpt.isEmpty()) {
-        throw new ReservaNotFoundException("Cita no encontrada con id: " + id);
+
+        if (citaOpt.isEmpty()) {
+            throw new ReservaNotFoundException("Cita no encontrada con id: " + id);
+        }
+
+        return citaOpt;
     }
 
-    return citaOpt;
+    @Override
+    public List<Cita> getCitasDisponibles() {
+        return citaRepository.findAll().stream()
+                .filter(Cita::isDisponible)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -37,16 +45,17 @@ public class CitaServiceImpl implements CitaService {
             throw new RuntimeException("El horario de la cita no está definido correctamente");
         }
 
-        if (!cita.isDisponible()) {
-            throw new RuntimeException("El horario no está disponible");
-        }
+        // if (!cita.isDisponible()) {
+        // throw new RuntimeException("El horario no está disponible");
+        // }
 
         return citaRepository.save(cita);
     }
 
     @Override
     public void cancelCita(Long id) {
-        Cita cita = citaRepository.findById(id).orElseThrow(() -> new ReservaNotFoundException("Cita no encontrada con id: " + id));
+        Cita cita = citaRepository.findById(id)
+                .orElseThrow(() -> new ReservaNotFoundException("Cita no encontrada con id: " + id));
         cita.setDisponible(true); // Marcar el horario como disponible
         citaRepository.save(cita);
         citaRepository.deleteById(id);
@@ -54,7 +63,8 @@ public class CitaServiceImpl implements CitaService {
 
     @Override
     public Cita updateCita(Long id, Cita citaActualizada) {
-        Cita citaExistente = citaRepository.findById(id).orElseThrow(() -> new ReservaNotFoundException("Cita no encontrada con id: " + id));
+        Cita citaExistente = citaRepository.findById(id)
+                .orElseThrow(() -> new ReservaNotFoundException("Cita no encontrada con id: " + id));
 
         citaExistente.setPaciente(citaActualizada.getPaciente());
         citaExistente.setFechaHora(citaActualizada.getFechaHora());

@@ -31,19 +31,19 @@ public class ReservasControllerTest {
         Cita cita1 = new Cita();
         cita1.setId(1L);
         cita1.setPaciente("Juan");
-        cita1.setFechaHora(LocalDateTime.now());
+        cita1.setFechaHora(LocalDateTime.now().toString());
 
         Cita cita2 = new Cita();
         cita2.setId(2L);
         cita2.setPaciente("Maria");
-        cita2.setFechaHora(LocalDateTime.now());
+        cita2.setFechaHora(LocalDateTime.now().toString());
 
         when(citaService.getAllCitas()).thenReturn(List.of(cita1, cita2));
 
         mockMvc.perform(get("/api/citas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].paciente", is("Juan")))
-                .andExpect(jsonPath("$[1].paciente", is("Maria")));
+                .andExpect(jsonPath("$._embedded.[0].paciente", is("Juan")))
+                .andExpect(jsonPath("$._embedded.[1].paciente", is("Maria")));
     }
 
     @Test
